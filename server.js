@@ -23,7 +23,7 @@ const DEMO = process.env.DEMO_ENABLED !== 'false';
 const pool = process.env.DATABASE_URL ? new pg.Pool({ connectionString: process.env.DATABASE_URL, ssl: process.env.DATABASE_URL.includes('localhost') ? false : { rejectUnauthorized: false }, max: 5 }) : null;
 
 app.set('trust proxy', 1);
-app.use(helmet({ contentSecurityPolicy: { directives: { defaultSrc: ["'self'"], scriptSrc: ["'self'"], styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'], fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'], imgSrc: ["'self'", 'data:', 'https://*.ezviz.com'], connectSrc: ["'self'"], frameSrc: ["'none'"] } }, crossOriginEmbedderPolicy: false }));
+app.use(helmet({ contentSecurityPolicy: { directives: { defaultSrc: ["'self'"], scriptSrc: ["'self'"], styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'], fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'], imgSrc: ["'self'", 'data:', 'https://*.ezviz.com'], connectSrc: ["'self'", "https://api.open-meteo.com"], frameSrc: ["'none'"] } }, crossOriginEmbedderPolicy: false }));
 app.use(express.json({ limit: '32kb' }));
 app.use(cookieParser());
 app.use('/api', rateLimit({ windowMs: 60_000, limit: 90, standardHeaders: true, legacyHeaders: false }));

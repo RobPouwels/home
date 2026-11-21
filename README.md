@@ -102,3 +102,10 @@ Vul optioneel `SOLAR_CAPACITY_KWP` in als totaal piekvermogen van je panelen
 zoninstraling in kWh/m². De grove schatting voor panelen is zoninstraling
 × kWp × 0,8. De schatting houdt geen rekening met dakrichting, helling of
 schaduw. De tegel toont hele dagen in Nederlandse tijd.
+
+Als Open-Meteo de vraag vanaf de server begrenst (HTTP 429), wacht de server de
+opgegeven termijn af. Als de aanbieder geen termijn doorgeeft, wacht de server
+een uur. Via **Haal weerdata op via dit apparaat** kun je bewust kiezen voor
+een aanvraag vanaf je browser. Open-Meteo ontvangt daarbij het IP-adres van
+je browser en dezelfde afgeronde locatie. Als Open-Meteo ook de browser
+begrenst, wacht die tab eveneens tot de wachttijd voorbij is.

@@ -1,3 +1,4 @@
+import { forecastDateKey, solarDays, weatherRetryAt, weatherUrl } from './solar-weather.js';
 import { currentPower, isGridMeter, todayPowerPoints } from './energy-overview.js';
 
 const $=s=>document.querySelector(s);const $$=s=>[...document.querySelectorAll(s)];let demo=true,live=false,data=null,config=null,stale=false;const favDevices=JSON.parse(localStorage.getItem('thuis_fav_devices')||'["d1","d2","d3"]');const favFlows=JSON.parse(localStorage.getItem('thuis_fav_flows')||'["f1","f2"]');
@@ -115,6 +116,9 @@ async function toggleDemo(on){demo=on;$('#connectionBanner').classList.remove('o
 async function loadConfig(){try{config=await api('/api/config');$('#redirectUrl').textContent=config.redirectUri;$('#homeyStatus').textContent=config.connected?'Verbonden':'Niet gekoppeld';$('#connectHomey').disabled=!config.oauthConfigured;$('#connectHomey').title=config.oauthConfigured?'':'Hostingvariabelen nog niet ingesteld';$('#disconnectHomey').disabled=!config.connected;}catch(e){toast(e.message)}}
 $('#loginForm').addEventListener('submit',async e=>{e.preventDefault();$('#loginError').textContent='';try{await api('/api/login',{method:'POST',body:JSON.stringify({password:$('#password').value})});$('#login').classList.add('hidden');$('#app').classList.remove('hidden');await boot();}catch(err){$('#loginError').textContent=err.message;}});
 let nextSolarCheck = 0;
+const solarButton = $('#solarDirect');
+const solarNote = $('#solarDirectNote');
+let browserWeatherRetryAt = Number(sessionStorage.getItem('thuis_solar_retry_at')) || 0;
 async function boot(){const h=await api('/api/health');await loadConfig();demo=h.demo&&!config?.connected;if(location.hash==='#instellingen')showPage('instellingen');if(location.search.includes('homey=connected'))toast('Homey succesvol gekoppeld.');if(location.search.includes('homey_error'))toast(new URLSearchParams(location.search).get('homey_error'));await Promise.all([loadData(), loadSolarForecast()]);}
 async function logout() {
   await api('/api/logout', { method: 'POST', body: '{}' });
@@ -143,6 +147,76 @@ function weatherLabel(code) {
   return 'Weertype onbekend';
 }
 
+function renderSolarForecast(forecast) {
+  const list = $('#solarDays');
+  const model = $('#solarModel');
+  const dateLabel = new Intl.DateTimeFormat('nl-NL', {
+    weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/Amsterdam',
+  });
+  const currentDay = forecastDateKey(new Date());
+  const nextDay = new Date(Date.parse(currentDay + 'T00:00:00Z') + 86_400_000).toISOString().slice(0, 10);
+  list.replaceChildren(...forecast.days.map(day => {
+    const card = document.createElement('li');
+    const name = document.createElement('span');
+    const value = document.createElement('strong');
+    const detail = document.createElement('span');
+    name.textContent = day.date === currentDay ? 'Vandaag' : day.date === nextDay ? 'Morgen' :
+      dateLabel.format(new Date(day.date + 'T12:00:00Z'));
+    value.textContent = day.estimatedKwh === null
+      ? energyNumber.format(day.sun) + ' kWh/m²'
+      : energyNumber.format(day.estimatedKwh) + ' kWh';
+    detail.textContent = weatherLabel(day.weatherCode);
+    card.append(name, value, detail);
+    return card;
+  }));
+  const origin = forecast.stale ? 'Laatst beschikbare verwachting' :
+    forecast.viaBrowser ? 'Verwachting via dit apparaat' : 'Verwachting opgehaald';
+  $('#solarStatus').textContent = origin + ' om ' + energyTime.format(new Date(forecast.fetchedAt));
+  model.textContent = forecast.days[0].estimatedKwh === null
+    ? 'Dit is de verwachte zoninstraling per m². Stel SOLAR_CAPACITY_KWP in voor een schatting van je opwek.'
+    : 'Grove dagschatting op basis van horizontale zoninstraling, je paneelvermogen en 20% systeemverlies. Dakrichting, helling en schaduw zijn niet meegerekend.';
+  list.hidden = model.hidden = false;
+}
+
+function offerBrowserForecast(config) {
+  solarButton.hidden = solarNote.hidden = !config;
+  solarButton.disabled = false;
+  if (!config) return;
+
+  solarButton.onclick = async () => {
+    const status = $('#solarStatus');
+    if (Date.now() < browserWeatherRetryAt) {
+      status.textContent = 'Ook dit apparaat moet wachten op Open-Meteo. Probeer het na '
+        + energyTime.format(new Date(browserWeatherRetryAt)) + ' opnieuw.';
+      return;
+    }
+    solarButton.disabled = true;
+    status.textContent = 'Zonverwachting ophalen…';
+    try {
+      const response = await fetch(weatherUrl(config), {
+        credentials: 'omit', referrerPolicy: 'no-referrer', signal: AbortSignal.timeout(15_000),
+      });
+      if (response.status === 429) {
+        browserWeatherRetryAt = weatherRetryAt(response.headers.get('Retry-After'));
+        sessionStorage.setItem('thuis_solar_retry_at', String(browserWeatherRetryAt));
+        throw new Error('rate-limit');
+      }
+      if (!response.ok) throw new Error('weather-request');
+      const days = solarDays(await response.json(), forecastDateKey(new Date()), config.capacity);
+      if (!days.length) throw new Error('no-days');
+      renderSolarForecast({ days, viaBrowser: true, fetchedAt: new Date().toISOString() });
+      offerBrowserForecast(null);
+      nextSolarCheck = Date.now() + 45 * 60_000;
+    } catch (error) {
+      status.textContent = error.message === 'rate-limit'
+        ? 'Ook dit apparaat wordt tijdelijk begrensd door Open-Meteo.'
+        : 'Dit apparaat kon de zonverwachting niet ophalen.';
+    } finally {
+      solarButton.disabled = false;
+    }
+  };
+}
+
 async function loadSolarForecast() {
   nextSolarCheck = Date.now() + 45 * 60_000;
   const status = $('#solarStatus');
@@ -150,55 +224,39 @@ async function loadSolarForecast() {
   const model = $('#solarModel');
   try {
     const forecast = await api('/api/solar-forecast');
+    offerBrowserForecast(forecast.browserForecast);
     if (!forecast.configured) {
       status.textContent = 'Stel bij Render SOLAR_LATITUDE en SOLAR_LONGITUDE in om de zonverwachting te tonen.';
       return;
     }
-    if (!forecast.days?.length) {
-      nextSolarCheck = Date.now() + 5 * 60_000;
-      list.hidden = model.hidden = true;
-      const details = {
-        timeout: 'Open-Meteo reageert te langzaam.',
-        network: 'De server kan Open-Meteo momenteel niet bereiken.',
-        empty: 'Open-Meteo levert geen zoninstraling voor de komende dagen.',
-        'invalid-response': 'Open-Meteo heeft onleesbare weerdata teruggestuurd.',
-        'provider-http': `Open-Meteo antwoordt met HTTP ${forecast.providerStatus ?? 'onbekend'}.`,
-      };
-      status.textContent = details[forecast.reason] || 'Zonverwachting tijdelijk niet beschikbaar.';
+    if (forecast.providerStatus === 429) nextSolarCheck = forecast.retryAt;
+    if (forecast.days?.length) {
+      if (forecast.stale && forecast.providerStatus !== 429) nextSolarCheck = Date.now() + 5 * 60_000;
+      renderSolarForecast(forecast);
       return;
     }
-    if (forecast.stale) nextSolarCheck = Date.now() + 5 * 60_000;
-    const dateLabel = new Intl.DateTimeFormat('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/Amsterdam' });
-    const dateParts = new Intl.DateTimeFormat('en-GB', {
-      timeZone: 'Europe/Amsterdam', calendar: 'iso8601', numberingSystem: 'latn',
-      year: 'numeric', month: '2-digit', day: '2-digit',
-    }).formatToParts();
-    const parts = Object.fromEntries(dateParts.map(part => [part.type, part.value]));
-    const currentDay = `${parts.year}-${parts.month}-${parts.day}`;
-    const nextDay = new Date(Date.parse(currentDay + 'T00:00:00Z') + 86_400_000).toISOString().slice(0, 10);
-    list.replaceChildren(...forecast.days.map(day => {
-      const card = document.createElement('li');
-      const name = document.createElement('span');
-      const value = document.createElement('strong');
-      const detail = document.createElement('span');
-      name.textContent = day.date === currentDay ? 'Vandaag' : day.date === nextDay ? 'Morgen' :
-        dateLabel.format(new Date(day.date + 'T12:00:00Z'));
-      value.textContent = day.estimatedKwh === null
-        ? energyNumber.format(day.sun) + ' kWh/m²'
-        : energyNumber.format(day.estimatedKwh) + ' kWh';
-      detail.textContent = weatherLabel(day.weatherCode);
-      card.append(name, value, detail);
-      return card;
-    }));
-    status.textContent = (forecast.stale ? 'Laatst beschikbare verwachting' : 'Verwachting opgehaald')
-      + ' om ' + energyTime.format(new Date(forecast.fetchedAt));
-    model.textContent = forecast.days[0].estimatedKwh === null
-      ? 'Dit is de verwachte zoninstraling per m². Stel SOLAR_CAPACITY_KWP in voor een schatting van je opwek.'
-      : 'Grove dagschatting op basis van horizontale zoninstraling, je paneelvermogen en 20% systeemverlies. Dakrichting, helling en schaduw zijn niet meegerekend.';
-    list.hidden = model.hidden = false;
+
+    if (forecast.providerStatus === 429) {
+      status.textContent = list.hidden
+        ? 'Open-Meteo begrenst aanvragen vanaf de server. Je kunt de verwachting via dit apparaat ophalen.'
+        : 'Open-Meteo begrenst aanvragen vanaf de server. Dit is de laatst opgehaalde verwachting.';
+      return;
+    }
+
+    nextSolarCheck = Date.now() + 5 * 60_000;
+    list.hidden = model.hidden = true;
+    const details = {
+      timeout: 'Open-Meteo reageert te langzaam.',
+      network: 'De server kan Open-Meteo momenteel niet bereiken.',
+      empty: 'Open-Meteo levert geen zoninstraling voor de komende dagen.',
+      'invalid-response': 'Open-Meteo heeft onleesbare weerdata teruggestuurd.',
+      'provider-http': 'Open-Meteo antwoordt met HTTP ' + (forecast.providerStatus ?? 'onbekend') + '.',
+    };
+    status.textContent = details[forecast.reason] || 'Zonverwachting tijdelijk niet beschikbaar.';
   } catch (error) {
     nextSolarCheck = Date.now() + 5 * 60_000;
     list.hidden = model.hidden = true;
-    status.textContent = 'De zonverwachting kon niet worden geladen. ' + (error.message === 'Niet aangemeld' ? 'Meld je opnieuw aan.' : 'Probeer het straks opnieuw.');
+    status.textContent = error.message === 'Niet aangemeld' ? 'Meld je opnieuw aan om de zonverwachting op te halen.'
+      : 'De zonverwachting kon niet worden geladen. Probeer het straks opnieuw.';
   }
 }

@@ -176,7 +176,32 @@ test('zonverwachting probeert een time-out opnieuw en geeft een HTTP 429 zonder 
   });
   assert.deepEqual(await limited(), {
     configured:true, unavailable:true, reason:'provider-http', providerStatus:429,
+    retryAt: now() + 60 * 60_000, browserForecast: {latitude:'52.00',longitude:'5.00',capacity:null},
   });
   await limited();
   assert.equal(calls, 3);
+});
+
+test('Open-Meteo wachttijd geldt ook voorbij middernacht en vervalt volgens Retry-After', async () => {
+  let time = Date.parse('2026-11-21T22:59:00Z');
+  let calls = 0;
+  const forecast = createSolarForecast({
+    SOLAR_LATITUDE:'51.815111', SOLAR_LONGITUDE:'5.737012', SOLAR_CAPACITY_KWP:'11.9',
+  }, {
+    now: () => time,
+    fetchImpl: async () => {
+      calls++;
+      if (calls === 1) return new Response(null,{status:429,headers:{'Retry-After':'180'}});
+      return Response.json({daily:{time:['2026-11-22'],shortwave_radiation_sum:[3.6],weather_code:[0]}});
+    },
+  });
+  const denied = await forecast();
+  assert.equal(denied.retryAt, time + 180_000);
+  assert.deepEqual(denied.browserForecast,{latitude:'51.82',longitude:'5.74',capacity:11.9});
+  time += 120_000;
+  assert.equal((await forecast()).providerStatus,429);
+  assert.equal(calls,1);
+  time += 60_000;
+  assert.equal((await forecast()).days[0].estimatedKwh,11.9 * 0.8);
+  assert.equal(calls,2);
 });
