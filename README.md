@@ -89,3 +89,16 @@ De server gebruikt `GET https://api.athom.com/user/me`, kiest `remoteUrl`, vraag
 ## Tests
 
 `npm test` voert smoke-tests uit met een gesimuleerde server: health, anonieme toegangsweigering, login, HttpOnly-cookie, demo-data, Advanced Flow-voorbeeld en foutieve login. Deze tests simuleren niet Athom's echte OAuth, Homey-apparaten, Insights, camera's of Legrand.
+
+## Zonverwachting
+
+Stel op Render onder **Environment** `SOLAR_LATITUDE` en `SOLAR_LONGITUDE` in.
+Gebruik de coördinaten van je woonplaats of wijk met een decimale punt. De server
+stuurt de coördinaten afgerond op twee decimalen naar Open-Meteo. Zonder
+locatie blijft de tegel zichtbaar met een instelinstructie.
+
+Vul optioneel `SOLAR_CAPACITY_KWP` in als totaal piekvermogen van je panelen
+(bijvoorbeeld `4.8` voor 4.800 Wp). Zonder piekvermogen toont het dashboard
+zoninstraling in kWh/m². De grove schatting voor panelen is zoninstraling
+× kWp × 0,8. De schatting houdt geen rekening met dakrichting, helling of
+schaduw. De tegel toont hele dagen in Nederlandse tijd.

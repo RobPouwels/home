@@ -2,13 +2,23 @@ import { currentPower, isGridMeter, todayPowerPoints } from './energy-overview.j
 
 const $=s=>document.querySelector(s);const $$=s=>[...document.querySelectorAll(s)];let demo=true,live=false,data=null,config=null,stale=false;const favDevices=JSON.parse(localStorage.getItem('thuis_fav_devices')||'["d1","d2","d3"]');const favFlows=JSON.parse(localStorage.getItem('thuis_fav_flows')||'["f1","f2"]');
 const icons={light:'☼',socket:'⏻',sensor:'◉',other:'⌂'};function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2600)}
-async function api(url,opts={}){const r=await fetch(url,{credentials:'same-origin',...opts,headers:{'Content-Type':'application/json',...(opts.headers||{})}});let j={};try{j=await r.json()}catch{}if(!r.ok)throw new Error(j.error||`Fout ${r.status}`);return j}
+let homeyRetryAt = 0;
+async function api(url,opts={}){
+const homeyReadOrControl = /^\/api\/homey\/(?:data|device\/|flow\/)/.test(url);
+if (homeyReadOrControl && Date.now() < homeyRetryAt) {
+  throw new Error('Homey begrenst de aanvragen tijdelijk. Probeer het na de wachttijd opnieuw.');
+}
+const r=await fetch(url,{credentials:'same-origin',...opts,headers:{'Content-Type':'application/json',...(opts.headers||{})}});let j={};try{j=await r.json()}catch{}if (r.status === 429 && homeyReadOrControl) {
+  const retry = Number(j.retryAfter ?? r.headers.get('Retry-After') ?? 120);
+  homeyRetryAt = Math.max(homeyRetryAt, Date.now() + (Number.isFinite(retry) ? Math.max(1, retry) : 120) * 1000);
+}
+if(!r.ok)throw new Error(j.error||`Fout ${r.status}`);return j}
 function showPage(p){$$('.page').forEach(x=>x.classList.toggle('active',x.id===`page-${p}`));$$('[data-page]').forEach(button => {
   const current = button.dataset.page === p;
   button.classList.toggle('active', current);
   if (current) button.setAttribute('aria-current', 'page');
   else button.removeAttribute('aria-current');
-});$('#pageName').textContent=({overzicht:'Overzicht',apparaten:'Apparaten',flows:'Flows',energie:'Energie',cameras:'Camera’s',instellingen:'Instellingen'})[p]||p;}
+});$('#pageName').textContent=({overzicht:'Overzicht',apparaten:'Apparaten',flows:'Flows',energie:'Energie',cameras:'Camera’s',bespaartips:'Bespaartips',informatie:'Handleiding & roadmap',instellingen:'Instellingen'})[p]||p;}
 function getCap(d,c){return d.capabilitiesObj?.[c]?.value??d.capabilitiesObj?.[c]??null}function isOn(d){return Boolean(getCap(d,'onoff'))}function roomName(d){return data?.zones?.find(z=>z.id===d.zone||z.id===d.zoneId)?.name||d.zoneName||'Onbekende kamer'}
 function deviceCard(d){const canOn=d.capabilities?.includes('onoff'),canDim=d.capabilities?.includes('dim');const on=isOn(d);return `<article class="device-card"><div class="device-top"><div class="device-icon">${icons[d.class]||icons.other}</div><div style="min-width:0"><div class="device-name">${esc(d.name)}</div><div class="device-room">${esc(roomName(d))}</div></div><button class="fav-star ${favDevices.includes(d.id)?'selected':''}" data-fav-device="${d.id}" title="Favoriet">★</button><span class="device-state ${on?'':'off'}">${canOn?(on?'Aan':'Uit'):'Beschikbaar'}</span></div><div class="device-controls">${canDim?`<input class="dim-control" aria-label="Dimmen ${esc(d.name)}" type="range" min="0" max="1" step=".01" value="${getCap(d,'dim')??0}" data-dim="${d.id}" ${!live&&!demo?'disabled':''}>`:canOn?`<span class="control-hint">${on?'Ingeschakeld':'Uitgeschakeld'}</span>`:`<span class="control-hint">Alleen uitlezen</span>`}${canOn?`<button class="switch ${on?'on':''}" aria-label="Schakel ${esc(d.name)}" aria-pressed="${on}" data-toggle="${d.id}" ${!live&&!demo?'disabled':''}></button>`:''}</div></article>`}
 function flowRow(f){return `<div class="flow-row"><span class="flow-symbol">⌁</span><div><b>${esc(f.name)}</b><small>${f.advanced?'Advanced Flow':'Gewone Flow'}</small></div><button class="fav-star ${favFlows.includes(f.id)?'selected':''}" data-fav-flow="${f.id}" title="Favoriet">★</button><button data-flow="${f.id}">Start →</button></div>`}
@@ -67,12 +77,16 @@ function renderEnergy(){const found=[];for(const d of data.devices){for(const c 
 function historySvg(rows){const pts=rows.map(r=>({v:Number(r.v??r.value??r.y),t:r.t??r.timestamp})).filter(p=>Number.isFinite(p.v));if(pts.length<2)return '<small class="muted">Onvoldoende meetpunten voor een grafiek.</small>';const vals=pts.map(p=>p.v),min=Math.min(...vals),max=Math.max(...vals),span=max-min||1;const poly=pts.map((p,i)=>`${(i/(pts.length-1))*500},${88-((p.v-min)/span)*76}`).join(' ');return `<svg class="history-svg" viewBox="0 0 500 100" preserveAspectRatio="none"><polyline points="${poly}" fill="none" stroke="#4b9b7d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><small class="muted">${min.toFixed(0)} – ${max.toFixed(0)} ${esc(rows[0]?.unit||'')}</small>`;}
 function bindControls(){$$('[data-fav-device]').forEach(b=>b.addEventListener('click',()=>{const id=b.dataset.favDevice;const i=favDevices.indexOf(id);if(i>=0)favDevices.splice(i,1);else favDevices.push(id);localStorage.setItem('thuis_fav_devices',JSON.stringify(favDevices));render();}));$$('[data-fav-flow]').forEach(b=>b.addEventListener('click',()=>{const id=b.dataset.favFlow;const i=favFlows.indexOf(id);if(i>=0)favFlows.splice(i,1);else favFlows.push(id);localStorage.setItem('thuis_fav_flows',JSON.stringify(favFlows));render();}));$$('[data-toggle]').forEach(b=>b.addEventListener('click',()=>changeDevice(b.dataset.toggle,'onoff',!isOn(data.devices.find(d=>d.id===b.dataset.toggle)))));$$('[data-dim]').forEach(b=>b.addEventListener('change',()=>changeDevice(b.dataset.dim,'dim',Number(b.value))));$$('[data-flow]').forEach(b=>b.addEventListener('click',()=>startFlow(b.dataset.flow)));}
 async function changeDevice(id,capability,value){if(!demo&&!live){toast('Bediening gepauzeerd: Homey is niet verbonden.');return;}const d=data.devices.find(x=>x.id===id);if(demo){d.capabilitiesObj[capability].value=value;render();toast(`${d.name}: ${capability==='dim'?'dimniveau aangepast':value?'ingeschakeld':'uitgeschakeld'} (demo)`);return;}try{await api(`/api/homey/device/${encodeURIComponent(id)}/capability`,{method:'POST',body:JSON.stringify({capability,value})});await loadData();toast('Opdracht uitgevoerd en status vernieuwd.');}catch(e){toast(`Niet gelukt: ${e.message}`);}}
-async function startFlow(id){if(demo){toast('Demo: Flow gestart (geen echt apparaat aangestuurd).');return;}try{await api(`/api/homey/flow/${encodeURIComponent(id)}/start`,{method:'POST',body:'{}'});toast('Flow-startopdracht verzonden.');}catch(e){toast(`Flow niet gestart: ${e.message}`);}}
+async function startFlow(id){if(!demo&&!live){toast('Bediening gepauzeerd: Homey is niet verbonden.');return;}if(demo){toast('Demo: Flow gestart (geen echt apparaat aangestuurd).');return;}try{await api(`/api/homey/flow/${encodeURIComponent(id)}/start`,{method:'POST',body:'{}'});toast('Flow-startopdracht verzonden.');}catch(e){toast(`Flow niet gestart: ${e.message}`);}}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 let loadSequence = 0;
 let pendingLoads = 0;
 
 async function loadData() {
+  if (!demo && Date.now() < homeyRetryAt) {
+    toast('Homey heeft de aanvragen tijdelijk begrensd. Automatisch vernieuwen hervat na de wachttijd.');
+    return;
+  }
   const request = ++loadSequence;
   const useDemo = demo;
   pendingLoads++;
@@ -100,7 +114,8 @@ function setConnection(state,msg=''){const banner=$('#connectionBanner');if(stat
 async function toggleDemo(on){demo=on;$('#connectionBanner').classList.remove('offline');if(on){await loadData();}else{if(!config?.connected){setConnection('offline','Koppel eerst Homey via Instellingen.');toast('Homey is nog niet gekoppeld.');return;}await loadData();}}
 async function loadConfig(){try{config=await api('/api/config');$('#redirectUrl').textContent=config.redirectUri;$('#homeyStatus').textContent=config.connected?'Verbonden':'Niet gekoppeld';$('#connectHomey').disabled=!config.oauthConfigured;$('#connectHomey').title=config.oauthConfigured?'':'Hostingvariabelen nog niet ingesteld';$('#disconnectHomey').disabled=!config.connected;}catch(e){toast(e.message)}}
 $('#loginForm').addEventListener('submit',async e=>{e.preventDefault();$('#loginError').textContent='';try{await api('/api/login',{method:'POST',body:JSON.stringify({password:$('#password').value})});$('#login').classList.add('hidden');$('#app').classList.remove('hidden');await boot();}catch(err){$('#loginError').textContent=err.message;}});
-async function boot(){const h=await api('/api/health');await loadConfig();demo=h.demo&&!config?.connected;if(location.hash==='#instellingen')showPage('instellingen');if(location.search.includes('homey=connected'))toast('Homey succesvol gekoppeld.');if(location.search.includes('homey_error'))toast(new URLSearchParams(location.search).get('homey_error'));await loadData();}
+let nextSolarCheck = 0;
+async function boot(){const h=await api('/api/health');await loadConfig();demo=h.demo&&!config?.connected;if(location.hash==='#instellingen')showPage('instellingen');if(location.search.includes('homey=connected'))toast('Homey succesvol gekoppeld.');if(location.search.includes('homey_error'))toast(new URLSearchParams(location.search).get('homey_error'));await Promise.all([loadData(), loadSolarForecast()]);}
 async function logout() {
   await api('/api/logout', { method: 'POST', body: '{}' });
   location.reload();
@@ -111,7 +126,64 @@ $$('[data-page]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.p
 (async()=>{try{await api('/api/health');await api('/api/session');$('#login').classList.add('hidden');$('#app').classList.remove('hidden');await boot();}catch{$('#login').classList.remove('hidden');}})();
 
 setInterval(() => {
-  if (!demo && config?.connected && !document.hidden && !$('#app').classList.contains('hidden') && !pendingLoads) {
+  if (!document.hidden && !$('#app').classList.contains('hidden') && Date.now() >= nextSolarCheck) loadSolarForecast();
+  if (!demo && config?.connected && !document.hidden && !$('#app').classList.contains('hidden') && !pendingLoads && Date.now() >= homeyRetryAt) {
     loadData();
   }
-}, 30_000);
+}, 60_000);
+
+function weatherLabel(code) {
+  if (code === 0) return 'Helder';
+  if (code === 1 || code === 2) return 'Deels bewolkt';
+  if (code === 3) return 'Bewolkt';
+  if (code === 45 || code === 48) return 'Mist';
+  if ((code >= 71 && code <= 77) || code === 85 || code === 86) return 'Sneeuw';
+  if (code >= 95) return 'Onweer';
+  if (code >= 51) return 'Neerslag';
+  return 'Weertype onbekend';
+}
+
+async function loadSolarForecast() {
+  nextSolarCheck = Date.now() + 45 * 60_000;
+  const status = $('#solarStatus');
+  const list = $('#solarDays');
+  const model = $('#solarModel');
+  try {
+    const forecast = await api('/api/solar-forecast');
+    if (!forecast.configured) {
+      status.textContent = 'Stel bij Render SOLAR_LATITUDE en SOLAR_LONGITUDE in om de zonverwachting te tonen.';
+      return;
+    }
+    if (!forecast.days?.length) throw new Error('Geen weersverwachting beschikbaar');
+    if (forecast.stale) nextSolarCheck = Date.now() + 5 * 60_000;
+    const dateLabel = new Intl.DateTimeFormat('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/Amsterdam' });
+    const today = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Amsterdam', dateStyle: 'short' });
+    const date = new Date();
+    const currentDay = today.format(date);
+    const nextDay = new Date(Date.parse(currentDay + 'T00:00:00Z') + 86_400_000).toISOString().slice(0, 10);
+    list.replaceChildren(...forecast.days.map(day => {
+      const card = document.createElement('li');
+      const name = document.createElement('span');
+      const value = document.createElement('strong');
+      const detail = document.createElement('span');
+      name.textContent = day.date === currentDay ? 'Vandaag' : day.date === nextDay ? 'Morgen' :
+        dateLabel.format(new Date(day.date + 'T12:00:00Z'));
+      value.textContent = day.estimatedKwh === null
+        ? energyNumber.format(day.sun) + ' kWh/m²'
+        : energyNumber.format(day.estimatedKwh) + ' kWh';
+      detail.textContent = weatherLabel(day.weatherCode);
+      card.append(name, value, detail);
+      return card;
+    }));
+    status.textContent = (forecast.stale ? 'Laatst beschikbare verwachting' : 'Verwachting opgehaald')
+      + ' om ' + energyTime.format(new Date(forecast.fetchedAt));
+    model.textContent = forecast.days[0].estimatedKwh === null
+      ? 'Dit is de verwachte zoninstraling per m². Stel SOLAR_CAPACITY_KWP in voor een schatting van je opwek.'
+      : 'Grove dagschatting op basis van horizontale zoninstraling, je paneelvermogen en 20% systeemverlies. Dakrichting, helling en schaduw zijn niet meegerekend.';
+    list.hidden = model.hidden = false;
+  } catch {
+    nextSolarCheck = Date.now() + 5 * 60_000;
+    list.hidden = model.hidden = true;
+    status.textContent = 'Zonverwachting tijdelijk niet beschikbaar.';
+  }
+}
