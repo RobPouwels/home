@@ -156,3 +156,27 @@ test('zonverwachting zonder locatie doet geen externe aanvraag en zonder kWp too
   now += 60 * 60_000;
   assert.equal((await forecast()).stale, true);
 });
+
+test('zonverwachting probeert een time-out opnieuw en geeft een HTTP 429 zonder extra aanvraag terug', async () => {
+  let calls = 0;
+  const env = { SOLAR_LATITUDE: '52', SOLAR_LONGITUDE: '5' };
+  const now = () => Date.parse('2026-11-21T10:00:00Z');
+  const retry = createSolarForecast(env, {
+    now,
+    fetchImpl: async () => {
+      if (++calls === 1) throw new DOMException('Simulatie', 'TimeoutError');
+      return Response.json({daily:{time:['2026-11-21'],shortwave_radiation_sum:[3.6]}});
+    },
+  });
+  assert.equal((await retry()).days[0].sun, 1);
+  assert.equal(calls, 2);
+  const limited = createSolarForecast(env, {
+    now,
+    fetchImpl: async () => { calls++; return new Response(null, {status:429}); },
+  });
+  assert.deepEqual(await limited(), {
+    configured:true, unavailable:true, reason:'provider-http', providerStatus:429,
+  });
+  await limited();
+  assert.equal(calls, 3);
+});

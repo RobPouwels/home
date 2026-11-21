@@ -154,12 +154,27 @@ async function loadSolarForecast() {
       status.textContent = 'Stel bij Render SOLAR_LATITUDE en SOLAR_LONGITUDE in om de zonverwachting te tonen.';
       return;
     }
-    if (!forecast.days?.length) throw new Error('Geen weersverwachting beschikbaar');
+    if (!forecast.days?.length) {
+      nextSolarCheck = Date.now() + 5 * 60_000;
+      list.hidden = model.hidden = true;
+      const details = {
+        timeout: 'Open-Meteo reageert te langzaam.',
+        network: 'De server kan Open-Meteo momenteel niet bereiken.',
+        empty: 'Open-Meteo levert geen zoninstraling voor de komende dagen.',
+        'invalid-response': 'Open-Meteo heeft onleesbare weerdata teruggestuurd.',
+        'provider-http': `Open-Meteo antwoordt met HTTP ${forecast.providerStatus ?? 'onbekend'}.`,
+      };
+      status.textContent = details[forecast.reason] || 'Zonverwachting tijdelijk niet beschikbaar.';
+      return;
+    }
     if (forecast.stale) nextSolarCheck = Date.now() + 5 * 60_000;
     const dateLabel = new Intl.DateTimeFormat('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/Amsterdam' });
-    const today = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Amsterdam', dateStyle: 'short' });
-    const date = new Date();
-    const currentDay = today.format(date);
+    const dateParts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/Amsterdam', calendar: 'iso8601', numberingSystem: 'latn',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+    }).formatToParts();
+    const parts = Object.fromEntries(dateParts.map(part => [part.type, part.value]));
+    const currentDay = `${parts.year}-${parts.month}-${parts.day}`;
     const nextDay = new Date(Date.parse(currentDay + 'T00:00:00Z') + 86_400_000).toISOString().slice(0, 10);
     list.replaceChildren(...forecast.days.map(day => {
       const card = document.createElement('li');
@@ -181,9 +196,9 @@ async function loadSolarForecast() {
       ? 'Dit is de verwachte zoninstraling per m². Stel SOLAR_CAPACITY_KWP in voor een schatting van je opwek.'
       : 'Grove dagschatting op basis van horizontale zoninstraling, je paneelvermogen en 20% systeemverlies. Dakrichting, helling en schaduw zijn niet meegerekend.';
     list.hidden = model.hidden = false;
-  } catch {
+  } catch (error) {
     nextSolarCheck = Date.now() + 5 * 60_000;
     list.hidden = model.hidden = true;
-    status.textContent = 'Zonverwachting tijdelijk niet beschikbaar.';
+    status.textContent = 'De zonverwachting kon niet worden geladen. ' + (error.message === 'Niet aangemeld' ? 'Meld je opnieuw aan.' : 'Probeer het straks opnieuw.');
   }
 }
