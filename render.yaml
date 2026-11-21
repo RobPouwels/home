@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: thuis-dashboard
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DEMO_ENABLED
+        value: "true"
+      - key: APP_URL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ENCRYPTION_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: HOMEY_CLIENT_ID
+        sync: false
+      - key: HOMEY_CLIENT_SECRET
+        sync: false
