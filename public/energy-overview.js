@@ -1,3 +1,5 @@
+import { historyPoints } from './energy-charts.js';
+
 const dateInAmsterdam = new Intl.DateTimeFormat('nl-NL', {
   timeZone: 'Europe/Amsterdam',
   year: 'numeric',
@@ -7,6 +9,7 @@ const dateInAmsterdam = new Intl.DateTimeFormat('nl-NL', {
 
 export function isGridMeter(device) {
   return ['smartmeter', 'smart_meter'].includes(device.class)
+    || /(?:^|:)com\.homewizard:(?:energy(?:_v2)?|cloud_p1)(?:$|:)/i.test(device.driverId || '')
     || /\bp1\b|slimme meter|smart meter|(?:^|[:.])p1(?:[-_.:]|$)/i.test(
       [device.name, device.driverId].join(' '),
     );
@@ -27,25 +30,19 @@ export function isPowerLogFor(log, device) {
   const id = log.id || '';
   const isOwned = log.ownerId === device.id || log.ownerUri === owner || log.uri === owner
     || id.startsWith(owner + ':');
-  const isWatts = /^w$/i.test((log.units ?? log.unit ?? '').trim());
-  const isPower = /(?:^|:)measure_power$/.test(id);
-  return isOwned && (isPower || isWatts);
+  const isWatts = /^w$/i.test(String(log.units ?? log.unit ?? '').trim());
+  const capability = id.split(':').at(-1);
+  if (capability.startsWith('meter_') || capability.startsWith('measure_power.')) return false;
+  return isOwned && (capability === 'measure_power' || isWatts);
 }
 
-export function todayPowerPoints(insights, device, now = new Date()) {
+export function todayPowerPoints(insights, device, now = new Date(), { keepMissing = false } = {}) {
   const today = dateInAmsterdam.format(now);
   for (const log of insights.filter(item => isPowerLogFor(item, device))) {
-    const entries = log.entries;
-    const rows = Array.isArray(entries) ? entries : entries?.values ?? entries?.data;
-    if (!Array.isArray(rows)) continue;
-    const points = rows.flatMap(row => {
-      const timestamp = Date.parse(row?.t ?? row?.timestamp);
-      const value = row?.v ?? row?.value;
-      if (!Number.isFinite(timestamp) || !Number.isFinite(value) || timestamp > now
-          || dateInAmsterdam.format(timestamp) !== today) return [];
-      return [{ timestamp, value }];
-    });
-    if (points.length >= 2) return points.sort((a, b) => a.timestamp - b.timestamp);
+    const points = historyPoints(log.entries).filter(({ timestamp }) =>
+      timestamp <= now && dateInAmsterdam.format(timestamp) === today);
+    const measurements = points.filter(point => point.value !== null);
+    if (measurements.length >= 2) return keepMissing ? points : measurements;
   }
   return [];
 }

@@ -1,25 +1,82 @@
 <!doctype html>
 <html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b1a"><title>Thuis – slim wonen</title><link rel="manifest" href="/manifest.webmanifest"><link rel="stylesheet" href="/styles.css"></head>
 <body><div class="site-backdrop" aria-hidden="true"></div><div id="login" class="login-wrap"><form id="loginForm" class="login-card"><div class="brand-mark">⌂</div><p class="eyebrow">JOUW SMART HOME</p><h1>Thuis</h1><p class="muted">Log in om je huis te bedienen.</p><label for="password">Persoonlijk wachtwoord</label><input id="password" type="password" autocomplete="current-password" required placeholder="Wachtwoord"><button class="primary wide">Aanmelden</button><p id="loginError" class="error"></p></form></div>
-<div id="app" class="shell hidden"><aside class="sidebar"><div class="brand"><span class="brand-mark small">⌂</span><span>Thuis<small>SMART HOME</small></span></div><nav id="sideNav" aria-label="Dashboard"><button class="nav-item active" aria-current="page" data-page="overzicht"><i>◫</i>Overzicht</button><button class="nav-item" data-page="apparaten"><i>◉</i>Apparaten</button><button class="nav-item" data-page="flows"><i>⌁</i>Flows</button><button class="nav-item" data-page="energie"><i>ϟ</i>Energie</button><button class="nav-item" data-page="cameras"><i>▣</i>Camera’s</button><button class="nav-item" data-page="bespaartips"><i aria-hidden="true">◈</i>Bespaartips</button><button class="nav-item" data-page="informatie"><i aria-hidden="true">ⓘ</i>Handleiding & roadmap</button></nav><div class="side-bottom"><div class="connection-mini"><span class="dot" id="sideDot"></span><span id="sideStatus">Demo actief</span></div><button class="nav-item" data-page="instellingen"><i>⚙</i>Instellingen</button><div class="profile"><div class="avatar">T</div><div>Mijn Thuis<small>Privé-dashboard</small></div><button id="logout" title="Uitloggen" aria-label="Uitloggen">↗</button></div></div></aside>
-<main class="main"><header class="topbar"><div><div class="crumb">MIJN WONING <span>/</span> <b id="pageName">Overzicht</b></div><h2 id="greeting">Goedemiddag</h2></div><div class="top-actions"><span class="demo-pill" id="demoPill">DEMO</span><button class="icon-btn" id="refresh" title="Vernieuwen" aria-label="Vernieuwen">↻</button><button class="icon-btn mobile-account" data-page="instellingen" title="Instellingen" aria-label="Instellingen">⚙</button></div></header>
+<div id="app" class="shell hidden"><aside class="sidebar"><div class="brand"><span class="brand-mark small">⌂</span><span>Thuis<small>SMART HOME</small></span></div><nav id="sideNav" aria-label="Dashboard"><button class="nav-item active" aria-current="page" data-page="overzicht"><i>◫</i>Overzicht</button><button class="nav-item" data-page="apparaten"><i>◉</i>Apparaten</button><button class="nav-item" data-page="flows"><i>⌁</i>Flows</button><button class="nav-item" data-page="energie"><i>ϟ</i>Energie</button><button class="nav-item" data-page="cameras"><i>▣</i>Camera’s</button><button class="nav-item" data-page="bespaartips"><i aria-hidden="true">◈</i>Bespaartips</button><button class="nav-item" data-page="informatie"><i aria-hidden="true">ⓘ</i>Handleiding & roadmap</button></nav><div class="side-bottom"><div class="connection-mini"><span class="dot" id="sideDot"></span><span id="sideStatus">Demo actief</span></div><button class="nav-item" data-page="instellingen"><i>⚙</i>Instellingen</button><div class="profile"><div class="avatar">T</div><div>Hoefsetuin 32<small>Privé-dashboard</small></div><button id="logout" title="Uitloggen" aria-label="Uitloggen">↗</button></div></div></aside>
+<main class="main"><header class="topbar"><div><div class="crumb">HOEFSETUIN 32 <span>/</span> <b id="pageName">Overzicht</b></div><h2 id="greeting">Goedemiddag</h2></div><div class="top-actions"><span class="demo-pill" id="demoPill">DEMO</span><button class="icon-btn" id="refresh" title="Vernieuwen" aria-label="Vernieuwen">↻</button><button class="icon-btn mobile-account" data-page="instellingen" title="Instellingen" aria-label="Instellingen">⚙</button></div></header>
 <div id="connectionBanner" class="connection-banner"><span class="dot"></span><div><b>Demo-omgeving</b><small>Je bekijkt voorbeeldgegevens. Er worden geen echte apparaten of Flows aangestuurd.</small></div><button id="demoToggle" class="text-btn">Demo verlaten</button></div>
-<section class="page active" id="page-overzicht"><div class="welcome-row"><h1>Mijn woning</h1></div>
+<section class="page active" id="page-overzicht"><div class="welcome-row"><h1>Hoefsetuin 32</h1></div>
+<div id="chargeAdvice" class="notice charge-advice" role="status" hidden>
+  <div><strong>Gunstig moment om de auto te laden</strong><p id="chargeAdviceDetail" class="muted"></p></div>
+</div>
 <div class="stats-grid"><article class="stat-card dark-stat"><div class="stat-top"><span>Actueel vermogen</span><span class="stat-icon">ϟ</span></div><div class="stat-value" id="powerValue">— <small>W</small></div><div class="stat-foot"><span class="trend up">●</span><span id="powerType">Wacht op meetwaarden</span></div><div class="stat-meta" id="powerMeta"></div></article><article class="stat-card"><div class="stat-top"><span>Apparaten</span><span class="stat-icon pale">◉</span></div><div class="stat-value" id="deviceCount">—</div><div class="stat-foot">Beschikbaar in Homey</div><div class="stat-meta">In alle kamers</div></article><article class="stat-card"><div class="stat-top"><span>Actieve Flows</span><span class="stat-icon pale">⌁</span></div><div class="stat-value" id="flowCount">—</div><div class="stat-foot">Bestaande automatiseringen</div><div class="stat-meta">Standaard en Advanced</div></article></div>
-<section class="panel solar-panel" aria-labelledby="solarTitle">
-  <div class="panel-head"><div><p class="eyebrow">ZON & ENERGIE</p><h3 id="solarTitle">Verwachte zonneopbrengst</h3></div><button class="text-btn" data-goto="bespaartips">Bespaartips</button></div>
+<div class="home-card-grid"><section class="panel solar-panel home-card" aria-labelledby="solarTitle">
+  <div class="panel-head"><div><p class="eyebrow">ZON & ENERGIE</p><h3 id="solarTitle">Zonneprognose</h3></div><button class="text-btn" data-goto="bespaartips">Bespaartips</button></div>
   <p id="solarStatus" class="muted small" role="status">Zonverwachting laden…</p>
   <button id="solarDirect" class="secondary" type="button" hidden>Haal weerdata op via dit apparaat</button>
   <p id="solarDirectNote" class="muted small" hidden>Je browser geeft je IP-adres en de afgeronde locatie door aan Open-Meteo.</p>
+  <dl class="card-metrics">
+    <div><dt>Verwachte opwek · 24 uur</dt><dd id="solarExpected">—</dd></div>
+    <div><dt>Zoninstraling nu</dt><dd id="solarRadiation">—</dd></div>
+  </dl>
+  <div id="solarHours" class="home-chart"></div>
   <ul id="solarDays" class="solar-days" hidden></ul>
   <p id="solarModel" class="muted small" hidden></p>
   <a class="link-btn" href="https://open-meteo.com/" target="_blank" rel="noreferrer">Weerdata van Open-Meteo</a>
 </section>
+<section class="panel home-card" aria-labelledby="consumptionTitle">
+  <div class="panel-head"><div><p class="eyebrow">VANDAAG · HOMEWIZARD P1</p><h3 id="consumptionTitle">Stroomverbruik en kosten</h3></div></div>
+  <dl class="card-metrics">
+    <div><dt>Van het net afgenomen</dt><dd id="gridImport">—</dd></div>
+    <div><dt>Geschatte afnamekosten</dt><dd id="gridCost">—</dd></div>
+    <div><dt>Aan het net teruggeleverd</dt><dd id="gridExport">—</dd></div>
+    <div><dt>Geschatte terugleververgoeding</dt><dd id="gridCredit">—</dd></div>
+  </dl>
+  <p id="costNote" class="muted small">Wacht op P1-metingen en je tarief.</p>
+  <button class="text-btn" data-goto="energie">Bekijk energiehistorie →</button>
+</section>
+<section class="panel home-card" aria-labelledby="pricesTitle">
+  <div class="panel-head"><div><p class="eyebrow">KOMENDE 24 UUR</p><h3 id="pricesTitle">Stroomprijzen · Vandebron</h3></div></div>
+  <dl class="card-metrics">
+    <div><dt>Prijs dit uur</dt><dd id="priceNow">—</dd></div>
+    <div><dt>Goedkoopste beschikbare uur</dt><dd id="priceLow">—</dd></div>
+  </dl>
+  <div id="priceChart" class="home-chart"></div>
+  <p id="priceStatus" class="muted small">Prijsvergelijking laden…</p>
+  <p class="muted small">Ter vergelijking. Een dynamisch contract wordt mogelijk vanaf februari 2027 overwogen.</p>
+  <a class="link-btn" href="https://vandebron.nl/energie/energiecontract/dynamisch" target="_blank" rel="noreferrer">Dynamisch bij Vandebron ↗</a>
+</section>
+<section class="panel home-card car-card" aria-labelledby="carTitle">
+  <div class="panel-head"><div><p class="eyebrow">ELEKTRISCHE AUTO</p><h3 id="carTitle">Jeep Avenger</h3></div><span class="tag car-tag">VOORBEELD</span></div>
+  <figure class="car-photo">
+    <img src="/images/jeep-avenger.webp" width="960" height="628" loading="lazy" alt="Grijze Jeep Avenger, schuin van voren">
+    <figcaption><a href="https://commons.wikimedia.org/wiki/File:2024_Jeep_Avenger_in_Granite,_front_left,_06-10-2025.jpg" target="_blank" rel="noreferrer">Foto Cutlass · CC0 ↗</a></figcaption>
+  </figure>
+  <dl class="card-metrics car-metrics">
+    <div><dt>Accu</dt><dd>70%</dd></div>
+    <div><dt>Actieradius</dt><dd>250 km</dd></div>
+    <div><dt>Laadvermogen</dt><dd>6,2 kW</dd></div>
+    <div><dt>Verwacht klaar</dt><dd>11:15</dd></div>
+    <div><dt>Bijgeladen</dt><dd>19 kWh</dd></div>
+    <div><dt>Laadsessie</dt><dd>€ 5,10</dd></div>
+  </dl>
+  <p class="muted small">Voorbeeldgegevens. De auto is nog niet gekoppeld.</p>
+</section>
+<section class="panel home-card" aria-labelledby="agendaTitle">
+  <div class="panel-head"><div><p class="eyebrow">KOMENDE 7 DAGEN</p><h3 id="agendaTitle">Google Agenda</h3></div></div>
+  <p class="muted small" id="agendaStatus">Agenda laden…</p>
+  <ul id="agendaList" class="home-data-list" hidden></ul>
+  <a class="link-btn" href="https://calendar.google.com/" target="_blank" rel="noreferrer">Open Google Agenda ↗</a>
+</section>
+<section class="panel home-card" aria-labelledby="musicTitle">
+  <div class="panel-head"><div><p class="eyebrow">NU AAN HET SPELEN</p><h3 id="musicTitle">Muziek op Google Home</h3></div></div>
+  <p class="muted small" id="musicStatus">Wacht op Homey.</p>
+  <ul id="musicList" class="home-data-list" hidden></ul>
+</section></div>
 <div class="section-head"><div><p class="eyebrow">SNELLE BEDIENING</p><h3>Favorieten</h3></div><button class="text-btn" data-goto="apparaten">Alle apparaten <span>→</span></button></div><div id="favoriteDevices" class="device-grid"></div>
-<div class="lower-grid"><section class="panel"><div class="panel-head"><div><p class="eyebrow">AUTOMATISERING</p><h3>Favoriete Flows</h3></div><button class="more-btn" data-goto="flows">•••</button></div><div id="favoriteFlows" class="flow-list"></div></section><section class="panel energy-panel"><div class="panel-head"><div><p class="eyebrow">ENERGIE VANDAAG</p><h3>Verbruik in beeld</h3></div><span class="live-label" id="overviewEnergyStatus">–</span></div><div class="energy-big" id="overviewEnergyPower">— <small>W</small></div><p class="muted small" id="overviewEnergySource"></p><div class="mini-chart" id="overviewEnergyChart" hidden></div><p class="muted small" id="overviewEnergyHistory">Wacht op meetwaarden.</p><button class="text-btn" data-goto="energie">Bekijk energiegegevens →</button></section></div></section>
+<div class="lower-grid"><section class="panel"><div class="panel-head"><div><p class="eyebrow">AUTOMATISERING</p><h3>Favoriete Flows</h3></div><button class="more-btn" data-goto="flows">•••</button></div><div id="favoriteFlows" class="flow-list"></div></section><section class="panel energy-panel"><div class="panel-head"><div><p class="eyebrow">ENERGIE VANDAAG</p><h3 id="overviewEnergyTitle">Vermogen in beeld</h3></div><span class="live-label" id="overviewEnergyStatus">–</span></div><div class="energy-big" id="overviewEnergyPower">— <small>W</small></div><p class="muted small" id="overviewEnergySource"></p><p class="energy-cost" id="overviewEnergyCost">Afnamekosten vandaag · —</p><div class="mini-chart" id="overviewEnergyChart" hidden></div><p class="muted small" id="overviewEnergyHistory">Wacht op meetwaarden.</p><button class="text-btn" data-goto="energie">Bekijk energiegegevens →</button></section></div></section>
 <section class="page" id="page-apparaten"><div class="page-intro"><p class="eyebrow">HOMEY PRO</p><h1>Apparaten</h1><p class="muted">Apparaten en kamers die in Homey bekend zijn.</p></div><div class="toolbar"><input id="deviceSearch" type="search" aria-label="Zoek een apparaat" placeholder="Zoek een apparaat…"><select id="roomFilter" aria-label="Kamer"><option value="all">Alle kamers</option></select></div><div id="allDevices" class="device-grid"></div></section>
 <section class="page" id="page-flows"><div class="page-intro"><p class="eyebrow">AUTOMATISERING</p><h1>Flows</h1><p class="muted">Start bestaande gewone en Advanced Flows wanneer je dat wilt.</p></div><div class="notice"><b>Let op</b><span>Een Flow kan meerdere apparaten aansturen. In demo-modus worden alleen voorbeeldacties uitgevoerd.</span></div><div id="allFlows" class="flow-cards"></div></section>
-<section class="page" id="page-energie"><div class="page-intro"><p class="eyebrow">INZICHT IN VERBRUIK</p><h1>Energie</h1><p class="muted">Alleen meetwaarden die als apparaat of capability via Homey beschikbaar zijn.</p></div><div class="notice"><b>HomeWizard koppelen</b><span>Koppel eerst HomeWizard in Homey. Een P1-meter wordt alleen getoond als Homey deze daadwerkelijk als apparaat aanbiedt.</span></div><div class="energy-cards" id="energyCards"></div><section class="panel history-panel"><div class="panel-head"><div><p class="eyebrow">HISTORIE</p><h3>Dagoverzicht</h3></div><span class="muted small">Vandaag</span></div><div id="historyContent"><p class="muted">Er is nog geen Homey Insights-historie gekoppeld. Bekijk de grafieken rechtstreeks in Homey Insights.</p><a class="link-btn" href="https://my.homey.app/" target="_blank" rel="noreferrer">Open Homey Insights ↗</a></div></section></section>
+<section class="page" id="page-energie"><div class="page-intro"><p class="eyebrow">INZICHT IN VERBRUIK</p><h1>Energie</h1><p class="muted">Alleen meetwaarden die als apparaat of capability via Homey beschikbaar zijn.</p></div><div class="notice"><b>HomeWizard koppelen</b><span>Koppel eerst HomeWizard in Homey. Een P1-meter wordt alleen getoond als Homey deze daadwerkelijk als apparaat aanbiedt.</span></div><div class="energy-cards" id="energyCards"></div><section class="panel history-panel"><div class="panel-head"><div><p class="eyebrow">HISTORIE</p><h3>Laatste 24 uur</h3></div></div><div id="historyContent"><p class="muted">Er is nog geen Homey Insights-historie gekoppeld. Bekijk de grafieken rechtstreeks in Homey Insights.</p><a class="link-btn" href="https://my.homey.app/" target="_blank" rel="noreferrer">Open Homey Insights ↗</a></div></section></section>
 <section class="page" id="page-cameras"><div class="page-intro"><p class="eyebrow">VEILIGHEID</p><h1>Camera’s & deurbel</h1><p class="muted">Open de officiële apps voor livebeeld en meldingen.</p></div><div class="camera-grid"><article class="camera-card"><div class="camera-art doorbell-art"><span>⌂</span><small>VOORDEUR</small></div><div class="camera-info"><div><span class="tag">NETATMO</span><h3>Voordeur – slimme deurbel</h3><p class="muted small">Livebeeld en meldingen via Netatmo Home + Security.</p></div><a class="primary" href="https://home.netatmo.com/" target="_blank" rel="noreferrer">Bekijk de voordeur ↗</a></div></article><article class="camera-card"><div class="camera-art ezviz-art"><span>◉</span><small>EZVIZ HB30 DUAL</small></div><div class="camera-info"><div><span class="tag">EZVIZ</span><h3>HB30 Dual 3K</h3><p class="muted small">Geïntegreerd livebeeld is nog niet geverifieerd voor dit model/account.</p></div><a class="secondary" href="https://www.ezviz.com/eu/page/ezviz-app" target="_blank" rel="noreferrer">Open EZVIZ-app ↗</a></div></article></div><div class="notice"><b>Deurbelmeldingen</b><span>Een Homey Flow-trigger kan later meldingen in dit dashboard tonen. Deze functie blijft uit totdat de trigger en webhook zijn getest.</span></div></section>
 <section class="page" id="page-bespaartips">
   <div class="page-intro"><h1>Bespaartips</h1><p class="muted">Gebruik de zonverwachting om het stroomverbruik thuis te plannen.</p></div>
@@ -41,6 +98,9 @@
       <details><summary>Camera’s en verbindingsproblemen</summary><p>Open <strong>Camera’s</strong> voor Netatmo of EZVIZ. Zie je verouderde Homey-metingen, wacht dan tot de verbinding terugkomt. Bij een tijdelijke aanvraaglimiet probeert het dashboard na de wachttijd opnieuw te verbinden.</p></details>
     </section>
     <section class="panel"><h3>Versiebeheer</h3><ol class="release-list">
+      <li><strong>1.4.0 · Hoefsetuin 32</strong><p class="muted">Zonneprognose per uur, P1-kosten, Vandebron, agenda, Google Home-muziek en een Jeep-voorbeeld op het overzicht.</p></li>
+      <li><strong>1.3.1 · Duidelijkere stroomgrafieken</strong><p class="muted">Een nullijn, kleuren en tijdstippen maken netafname en teruglevering zichtbaar.</p></li>
+      <li><strong>1.3.0 · Laadadvies op het overzicht</strong><p class="muted">Een melding in Thuis bij aanhoudende teruglevering, als Homey bevestigt dat je thuis bent.</p></li>
       <li><strong>1.1.0 · Energie plannen</strong><p class="muted">Bespaartips, gebruikershandleiding, roadmap en zonverwachting op het overzicht.</p></li>
       <li><strong>1.0.0 · Eerste dashboard</strong><p class="muted">Homey-koppeling, apparaten, Flows, energie, camera-links en mobiele weergave. Latere verbeteringen voegden de vaste luchtfoto en wachttijd bij aanvraaglimieten toe.</p></li>
     </ol></section>
@@ -50,6 +110,18 @@
       <li><strong>HomeWizard-opleverdashboard uitbreiden</strong><p class="muted">De HomeWizard-API koppelen voor extra inzicht in afname, teruglevering en verbruik per periode. Eerst bepalen welke gegevens de gekozen koppeling buiten het thuisnetwerk beschikbaar stelt.</p></li>
       <li><strong>Tablet ophangen</strong><p class="muted">Een vaste plek kiezen, voeding regelen en het dashboard op de tablet in volledig scherm testen.</p></li>
       <li><strong>Homey Flows met Mirthe</strong><p class="muted">Samen de veelgebruikte routines kiezen, aanmaken en testen.</p></li>
+      <li>
+        <strong>Flow in Homey voor melding bij laadmogelijkheid auto</strong>
+        <details>
+          <summary>Stappenplan voor de Flow</summary>
+          <ol>
+            <li><strong>Als</strong> de HomeWizard P1-meter minstens <strong>10 minuten</strong> voldoende stroom teruglevert. Gebruik het actuele vermogen en kies de drempel op basis van je minimale laadvermogen. Voor de tijdsvoorwaarde kun je de Homey-app <em>Device Capabilities</em> gebruiken. <a href="https://homey.app/en-de/app/com.homewizard/" target="_blank" rel="noreferrer">HomeWizard op Homey</a></li>
+            <li><strong>En</strong> Homey meldt op het moment van verzenden dat <strong>Rob thuis</strong> is. Houd <strong>24 uur</strong> tussen meldingen aan. <a href="https://support.homey.app/hc/en-us/articles/18186396006428-Set-up-Home-Away-Detection" target="_blank" rel="noreferrer">Thuis/Afwezig-detectie</a></li>
+            <li><strong>Dan</strong> stuurt Homey een pushmelding naar je account: <em>‘Er is al 10 minuten voldoende stroomoverschot. Dit kan een goed moment zijn om de auto op te laden.’</em></li>
+          </ol>
+          <p class="muted">Zet op Android meldingen voor Homey aan. Schakel voor automatische aanwezigheidsdetectie <strong>Thuis/Afwezig-detectie</strong> in en geef Homey locatietoegang <strong>Altijd toestaan</strong>. <a href="https://support.homey.app/hc/en-us/articles/19516449667740-Manage-app-permissions-for-Homey" target="_blank" rel="noreferrer">Homey-appmachtigingen</a></p>
+        </details>
+      </li>
       <li><strong>EZVIZ-camera beter inrichten</strong><p class="muted">Detectiezones en meldingen afstemmen en onderzoeken hoe je sneller livebeeld opent.</p></li>
       <li><strong>Agenda met komende afspraken</strong><p class="muted">De eerstvolgende afspraken uit een gedeelde agenda tonen, met een instelling voor welke details zichtbaar zijn.</p></li>
       <li><span class="wish-label">Gegeneerde wens</span><strong>Laadadvies voor de auto</strong><p class="muted">Voorstel voor een laadmoment op basis van zonneoverschot, gewenste vertrektijd en eventueel het actuele stroomtarief.</p></li>

@@ -226,3 +226,127 @@ button:disabled { cursor: not-allowed; opacity: .6; }
   .solar-days span { font-size: .75rem; }
   .solar-panel .panel-head { flex-wrap: wrap; }
 }
+
+.charge-advice { margin-bottom: 15px; background: #e6f5eb; border-color: #b7d9c5; color: #17482e; }
+.charge-advice strong { display: block; margin-bottom: 4px; }
+
+.roadmap-list details { margin-top: 5px; }
+.roadmap-list summary { min-height: 44px; padding: 10px 0; cursor: pointer; }
+.roadmap-list ol { margin: 0 0 12px; padding-inline-start: 24px; }
+.roadmap-list ol li { border: 0; padding-top: 6px; }
+
+.mini-chart { height: auto; }
+.energy-chart {
+  --chart-import: #a65613;
+  --chart-export: #087350;
+  --chart-neutral: #416b81;
+  margin: 12px 0;
+  min-width: 0;
+}
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  padding: 0;
+  margin: 0 0 8px;
+  list-style: none;
+  font-size: .8rem;
+  font-weight: 650;
+}
+.chart-legend li { display: inline-flex; align-items: center; gap: 6px; }
+.chart-legend span { width: .65rem; height: .65rem; border-radius: 2px; background: currentColor; }
+.chart-import { color: var(--chart-import); }
+.chart-export { color: var(--chart-export); }
+.chart-neutral { color: var(--chart-neutral); }
+.chart-plot {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  grid-template-rows: clamp(104px, 18vw, 160px) auto;
+  column-gap: 8px;
+  row-gap: 3px;
+  color: var(--muted);
+  font-size: .72rem;
+  font-variant-numeric: tabular-nums;
+}
+.history-line .chart-plot { grid-template-rows: clamp(125px, 22vw, 210px) auto; }
+.chart-plot svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.chart-y {
+  display: grid;
+  grid-template-rows: 4% 46% 46% 4%;
+  align-items: start;
+  text-align: right;
+}
+.chart-y span { transform: translateY(-50%); white-space: nowrap; }
+.chart-y span:first-child { grid-row: 2; }
+.chart-y span:nth-child(2) { grid-row: 3; }
+.chart-y span:last-child { grid-row: 4; }
+.chart-x { grid-column: 2; display: flex; justify-content: space-between; gap: 4px; }
+.chart-guide, .chart-trace {
+  vector-effect: non-scaling-stroke;
+  fill: none;
+}
+.chart-guide { stroke: #cad7d0; stroke-width: 1; }
+.chart-zero { stroke: #526d62; stroke-width: 1.4; }
+.chart-area { fill: currentColor; fill-opacity: .19; }
+.chart-trace { stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.history-line { min-width: 0; }
+
+.home-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-block: 20px;
+}
+.home-card { min-width: 0; margin: 0; }
+.home-card .panel-head { margin-bottom: 12px; }
+.home-card h3 { overflow-wrap: anywhere; }
+.home-card > .small { margin: 10px 0; }
+.card-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0;
+}
+.card-metrics > div {
+  display: grid;
+  align-content: start;
+  gap: 3px;
+  padding: 10px 12px;
+  border: 1px solid #dbe7e1;
+  border-radius: 12px;
+  background: #f2f8f5;
+}
+.card-metrics dt { color: var(--muted); font-size: .78rem; }
+.card-metrics dd { margin: 0; font-size: clamp(.96rem, 1.7vw, 1.2rem); font-weight: 750; overflow-wrap: anywhere; }
+.home-chart:empty { display: none; }
+.home-chart {
+  padding: 10px 12px;
+  margin-block: 12px;
+  border-radius: 12px;
+  background: #edf5f1;
+}
+.forecast-plot svg { display: block; width: 100%; height: 102px; overflow: visible; }
+.forecast-plot .sun-slot { fill: #a76a0e; }
+.forecast-plot .price-slot { fill: #47798a; }
+.forecast-plot .price-low { fill: #006f52; }
+.forecast-plot .plot-zero { stroke: #527067; vector-effect: non-scaling-stroke; }
+.forecast-plot .plot-missing { stroke: #a3b9ae; stroke-dasharray: 2 2; vector-effect: non-scaling-stroke; }
+.plot-axis { display: flex; justify-content: space-between; gap: 3px; font-size: .69rem; color: var(--muted); margin-top: 5px; }
+.plot-caption { font-size: .75rem; color: var(--muted); margin: 0 0 5px; }
+.car-photo { position: relative; margin: 0; border-radius: 13px; overflow: hidden; background: #243531; }
+.car-photo img { display: block; width: 100%; height: clamp(145px, 19vw, 228px); object-fit: cover; object-position: 50% 65%; }
+.car-photo figcaption { position: absolute; right: 7px; bottom: 7px; font-size: .67rem; }
+.car-photo a { color: white; background: #172a26; border-radius: 4px; padding: 3px 6px; }
+.car-tag { align-self: start; flex-shrink: 0; }
+.car-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.home-data-list { list-style: none; padding: 0; margin: 10px 0; }
+.home-data-list li { display: grid; gap: 3px; padding: 9px 0; border-top: 1px solid #dbe7e1; overflow-wrap: anywhere; }
+.home-data-list small { color: var(--muted); font-size: .79rem; }
+.energy-cost { margin-block: 9px; font-size: .87rem; font-weight: 650; }
+@media (max-width: 720px) {
+  .home-card-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+}
+@media (max-width: 360px) {
+  .card-metrics > div { padding: 8px; }
+  .car-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

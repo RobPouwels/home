@@ -109,3 +109,84 @@ een uur. Via **Haal weerdata op via dit apparaat** kun je bewust kiezen voor
 een aanvraag vanaf je browser. Open-Meteo ontvangt daarbij het IP-adres van
 je browser en dezelfde afgeronde locatie. Als Open-Meteo ook de browser
 begrenst, wacht die tab eveneens tot de wachttijd voorbij is.
+
+## Laadadvies op het overzicht
+
+Het overzicht toont een laadadvies wanneer Homey bevestigt dat je thuis bent
+en de slimme meter gedurende de ingestelde tijd genoeg teruglevering meet.
+Thuis gebruikt de bestaande verversing van het geopende dashboard en toont de
+actuele teruglevering bij het advies. Na het openen of herladen van de server
+kan het tot de ingestelde meetduur duren voordat er een advies verschijnt.
+Zodra de teruglevering daalt of je aanwezigheid niet kan worden bevestigd,
+verdwijnt de melding bij de volgende verversing. Onzekere, verouderde of
+ontbrekende meetwaarden geven geen advies. Thuis raadpleegt je auto niet en
+stuurt de laadpaal niet aan.
+
+- `CHARGE_SURPLUS_W`: ingestelde laaddrempel in watt. Gebruik een positieve
+  waarde die past bij het minimale laadvermogen van je installatie.
+- `CHARGE_SURPLUS_MINUTES`: meetduur, standaard 10 minuten.
+- `CHARGE_METER_ID`: optioneel lokaal Homey-apparaat-ID van je P1-meter, voor
+  installaties met meerdere kandidaatmeters.
+- `CHARGE_HOMEY_USER_ID`: optioneel lokaal Homey-gebruikers-ID. Laat leeg als
+  je eigen Homey-account is gekoppeld.
+
+Geef de Homey API-client leesrecht **View everyone's presence**
+(`homey.presence.readonly`). Voor het gekoppelde account gebruikt Thuis
+ook `homey.user.self`. Verbind Homey opnieuw als je de rechten wijzigt.
+
+## Startpagina van Hoefsetuin 32
+
+### Zonneprognose
+
+Met de bestaande `SOLAR_LATITUDE` en `SOLAR_LONGITUDE` wordt het weer eenmalig per
+cacheperiode opgehaald voor zowel de dag- als uurverwachting. Stel
+`SOLAR_CAPACITY_KWP=11.9` in voor jouw 32 zonnepanelen. De grafiek toont een
+schatting per uur voor de komende 24 uur en de kaart toont de verwachte opwek
+(kWh) en huidige zoninstraling (W/m²). Het rekenmodel gebruikt horizontale
+instraling met een systeemfactor van 80%. De noord- en zuidhelft, dakhelling en
+schaduw worden nog niet apart gemodelleerd.
+
+### Stroomverbruik en kosten
+
+- Zet in Render onder **Environment** `ELECTRICITY_IMPORT_EUR_KWH` op je eigen
+  variabele afnametarief per kWh inclusief btw en eventuele energiebelasting
+  en inkoopopslag. Gebruik bijvoorbeeld `0.28` als je tarief € 0,28/kWh is.
+- Zet optioneel `ELECTRICITY_EXPORT_EUR_KWH` op je terugleververgoeding per
+  kWh. Bij een oningevuld tarief blijft het bijbehorende bedrag leeg.
+- De kaart gebruikt de afname- en teruglevertellers van de P1-meter via Homey
+  Insights, vergeleken met een meting op of binnen 15 minuten van Nederlandse
+  middernacht. Een afwijkende tijd geeft een benadering (`≈`). De raming
+  bevat uitsluitend variabele bedragen en verwerkt geen vaste kosten,
+  terugleverkosten of saldering. Leveranciers met meerdere tarieven kunnen
+  voor deze kaart één gemiddeld afnametarief invoeren.
+- De kaart met het actuele vermogen toont dezelfde afnamekosten van vandaag.
+
+### Google Agenda
+
+1. Maak in Google Cloud een serviceaccount aan en schakel de **Google Calendar API** in.
+2. Maak een JSON-sleutel voor het serviceaccount. Plaats de volledige JSON in
+   Render als `GOOGLE_CALENDAR_SERVICE_ACCOUNT_JSON`. Upload de sleutel uitsluitend
+   als omgevingsvariabele in Render.
+3. Deel in Google Agenda de gewenste agenda met het serviceaccountadres uit
+   `client_email`. Kies alleen-lezen toegang tot alle afspraakdetails.
+4. Kopieer bij **Agenda integreren** het agenda-ID naar `GOOGLE_CALENDAR_ID` in Render.
+   De kaart toont maximaal zes afspraken uit de komende zeven dagen. Als privé
+   gemarkeerde afspraken verschijnen als ‘Bezet’ als Google deze doorgeeft.
+
+Zie [Google Agenda delen](https://support.google.com/calendar/answer/37082) en
+[Google Cloud-serviceaccounts](https://cloud.google.com/iam/docs/service-accounts-create).
+
+### Muziek, prijzen en auto
+
+- Voeg je Google Home- of Nest-speaker in Homey toe via de
+  [Google Chromecast-app](https://homey.app/nl-nl/app/com.google.chromecast/).
+  De kaart toont de afspeelstatus, titel en artiest voor zover de speaker en
+  de gebruikte afspeelbron deze gegevens via Homey leveren.
+- Maak voor de 24-uursvergelijking een persoonlijke
+  [Enever-token](https://enever.nl/prijzenfeeds/) aan en zet die in Render
+  als `ENEVER_TOKEN`. De kaart gebruikt de Vandebron-uurprijzen uit deze
+  externe feed. Uren die nog niet zijn gepubliceerd blijven open. Deze
+  prijsvergelijking verandert de dagkostenkaart of je contract niet.
+- De Jeep Avenger-kaart toont vaste voorbeeldwaarden. De
+  [foto van Cutlass](https://commons.wikimedia.org/wiki/File:2024_Jeep_Avenger_in_Granite,_front_left,_06-10-2025.jpg)
+  valt onder CC0 en is verkleind voor het dashboard.
