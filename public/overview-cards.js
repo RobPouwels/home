@@ -57,16 +57,13 @@ export function renderCosts(data, tariffs, stale) {
   write('gridExport', reading(sent));
   write('gridCost', euros(cost));
   write('gridCredit', euros(credit));
-  write('overviewEnergyCost', 'Afnamekosten vandaag · ' + euros(cost) +
-    (data?.demo ? ' (demo)' : stale && Number.isFinite(cost) ? ' (laatst bekend)' : ''));
   const notes = [];
-  if (data?.demo) notes.push('Voorbeeldmeterstanden en voorbeeldtarieven.');
-  if (stale && isToday) notes.push('Laatst bekende metingen.');
-  if (!taken) notes.push('Afname sinds middernacht verschijnt zodra Homey een P1-meterstand rond de daggrens en een actuele stand levert.');
-  if (Number.isFinite(rates?.importRate)) notes.push('Afnametarief ' + rateNumber.format(rates.importRate) + ' €/kWh.');
+  if (data?.demo) notes.push('Demo.');
+  if (stale && isToday) notes.push('Laatst bekend.');
+  if (!taken) notes.push('Geen P1-dagstand.');
+  if (Number.isFinite(rates?.importRate)) notes.push(rateNumber.format(rates.importRate) + ' €/kWh afname.');
   else notes.push('Stel je afnametarief in bij Render.');
-  if (Number.isFinite(rates?.exportRate)) notes.push('Terugleververgoeding ' + rateNumber.format(rates.exportRate) + ' €/kWh.');
-  if (taken || sent) notes.push('Bedragen zijn indicatief, exclusief vaste kosten en saldering.');
+  if (taken || sent) notes.push('Excl. vaste kosten en saldering.');
   write('costNote', notes.join(' '));
 }
 
@@ -94,9 +91,9 @@ export function renderMusic(data, stale) {
   const status = playing.length
     ? data.demo ? 'Voorbeeld via de Homey-demo.' : stale ? 'Laatst bekende afspeelstatus via Homey.' : 'Afspeelstatus via Homey.'
     : stale ? 'Actuele afspeelstatus kon niet worden opgehaald.'
-      : !devices.length ? 'Voeg je Google Nest- of Home-speaker toe via de Google Chromecast-app in Homey.'
+      : !devices.length ? 'Voeg je speaker toe via Chromecast in Homey.'
         : devices.some(device => device.active === false) ? 'Geen actieve weergave gemeld.'
-          : 'Homey geeft geen afspeelstatus door voor deze speaker.';
+          : 'Geen afspeelstatus beschikbaar.';
   write('musicStatus', status);
 }
 
@@ -131,7 +128,7 @@ export function renderFeeds(feeds) {
     format: value => withUnit(value, 'ct/kWh'), highlight: best,
   });
   write('priceStatus', !feeds ? 'Prijsfeed tijdelijk niet beschikbaar.'
-    : !prices?.configured ? 'Stel een persoonlijke Enever-token in bij Render om de vergelijkingsprijzen te tonen.'
-      : !known ? 'De prijsfeed heeft momenteel geen bruikbare Vandebron-tarieven.'
+    : !prices?.configured ? 'Stel je Enever-token in bij Render.'
+      : !known ? 'Tarieven tijdelijk niet beschikbaar.'
         : `${known} van 24 uren beschikbaar via Enever, inclusief btw.`);
 }

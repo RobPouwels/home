@@ -159,7 +159,9 @@ schaduw worden nog niet apart gemodelleerd.
   bevat uitsluitend variabele bedragen en verwerkt geen vaste kosten,
   terugleverkosten of saldering. Leveranciers met meerdere tarieven kunnen
   voor deze kaart één gemiddeld afnametarief invoeren.
-- De kaart met het actuele vermogen toont dezelfde afnamekosten van vandaag.
+- Op het overzicht staan het actuele vermogen en de afnamekosten in de eerste kaart.
+  Groen betekent teruglevering en rood betekent geen teruglevering. Bij een
+  ontbrekende of oude meting blijft de indicator neutraal.
 
 ### Google Agenda
 
@@ -188,5 +190,5 @@ Zie [Google Agenda delen](https://support.google.com/calendar/answer/37082) en
   externe feed. Uren die nog niet zijn gepubliceerd blijven open. Deze
   prijsvergelijking verandert de dagkostenkaart of je contract niet.
 - De Jeep Avenger-kaart toont vaste voorbeeldwaarden. De
-  [foto van Cutlass](https://commons.wikimedia.org/wiki/File:2024_Jeep_Avenger_in_Granite,_front_left,_06-10-2025.jpg)
-  valt onder CC0 en is verkleind voor het dashboard.
+  [foto van Alexander-93](https://commons.wikimedia.org/wiki/File:Jeep_Avenger_1X7A0818.jpg)
+  is verkleind en gepubliceerd onder [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).

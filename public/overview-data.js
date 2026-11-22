@@ -99,3 +99,33 @@ export function playback(devices) {
       };
     });
 }
+
+export function powerDirection(measurement, stale) {
+  if (!Number.isFinite(measurement?.value)) return { state: 'unknown', label: 'Geen meting' };
+  if (stale) return { state: 'unknown', label: 'Laatst bekende meting' };
+  if (!isGridMeter(measurement.device)) return { state: 'unknown', label: 'Vermogen van één apparaat' };
+  if (measurement.value < 0) return { state: 'export', label: 'Teruglevering' };
+  return { state: 'no-export', label: measurement.value > 0 ? 'Netafname' : 'Geen teruglevering' };
+}
+
+export function serviceStatus(mode, devices) {
+  const activeDevices = (devices ?? []).filter(device => device.available !== false);
+  const isHomeWizard = activeDevices.some(device => /(?:^|:)com\.homewizard(?=:|$)/i.test(
+    [device.driverId, device.driverUri, device.ownerUri].filter(Boolean).join(':'),
+  ) || /\bhomewizard\b/i.test(device.name ?? ''));
+  return {
+    Homey: mode === 'online' ? 'online' : mode === 'demo' ? 'demo' : 'offline',
+    Google: mode === 'online' ? (playback(activeDevices).length ? 'online' : 'unavailable') : 'unknown',
+    Wizard: mode === 'online' ? (isHomeWizard ? 'online' : 'unavailable') : 'unknown',
+  };
+}
+
+const amsterdamHour = new Intl.DateTimeFormat('nl-NL', {
+  timeZone: 'Europe/Amsterdam', hour: 'numeric', hourCycle: 'h23',
+});
+
+export function welcomeText(now = Date.now()) {
+  const hour = Number(amsterdamHour.format(now));
+  const timeOfDay = hour < 6 ? 'Goedenacht' : hour < 12 ? 'Goedemorgen' : hour < 18 ? 'Goedemiddag' : 'Goedenavond';
+  return timeOfDay + ', welkom bij Hoefsetuin 32';
+}

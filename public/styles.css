@@ -350,3 +350,107 @@ button:disabled { cursor: not-allowed; opacity: .6; }
   .card-metrics > div { padding: 8px; }
   .car-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+.compact-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px 12px;
+  height: auto;
+  min-height: 0;
+  padding-block: 12px;
+  margin-bottom: 12px;
+}
+.header-title { min-width: 0; }
+.header-title h1 {
+  margin: 2px 0 0;
+  font-size: clamp(1.2rem, 2.8vw, 2.05rem);
+  line-height: 1.15;
+  letter-spacing: -.025em;
+  text-shadow: 0 2px 8px #102a24;
+}
+.service-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 7px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.service-strip li {
+  --lamp: #a3b3ad;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 7px;
+  border-radius: 6px;
+  background: #112923;
+  color: #f4faf7;
+  font-size: .75rem;
+}
+.service-strip li::before {
+  content: "";
+  width: .5rem;
+  height: .5rem;
+  border-radius: 50%;
+  background: var(--lamp);
+}
+.service-strip li[data-status="online"] { --lamp: #79e7a8; }
+.service-strip li[data-status="offline"], .service-strip li[data-status="unavailable"] { --lamp: #ff988f; }
+.service-strip li[data-status="demo"], .service-strip li[data-status="example"] { --lamp: #ffd077; }
+.service-strip li span { color: #d4e2dc; }
+.compact-header .header-demo { justify-self: end; padding: 0 8px; color: #f5fff9; background: #18352d; font-size: .75rem; }
+.compact-alert { display: block; padding: 8px 12px; margin: 0 0 10px; }
+#page-overzicht > .panel, #page-overzicht .home-card { padding: clamp(12px, 1.8vw, 20px); }
+#page-overzicht .panel-head { gap: 8px; margin-bottom: 8px; }
+.daily-energy h2 { margin: 0; font-size: 1.24rem; }
+.daily-energy .panel-head .text-btn, .home-card .panel-head .text-btn { min-height: 36px; }
+.energy-now {
+  --power-ink: #29423a;
+  --power-bg: #eaf1ee;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  padding: 9px 12px;
+  border-radius: 11px;
+  border-inline-start: 4px solid currentColor;
+  color: var(--power-ink);
+  background: var(--power-bg);
+}
+.energy-now[data-direction="export"] { --power-ink: #09613b; --power-bg: #ddf6e5; }
+.energy-now[data-direction="no-export"] { --power-ink: #9a282e; --power-bg: #fce8e8; }
+.energy-now h3, .energy-now p { margin: 0; }
+.energy-now h3 { font-size: .85rem; }
+.energy-now p { font-size: .79rem; }
+.energy-now strong { font-size: clamp(1.4rem, 3vw, 2.1rem); white-space: nowrap; }
+.energy-now strong small { font-size: .8rem; }
+.daily-energy .energy-chart { margin: 7px 0; }
+.daily-energy .chart-plot { grid-template-rows: clamp(64px, 9vw, 98px) auto; }
+.energy-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+#page-overzicht .home-card-grid { gap: 12px; margin-block: 12px; align-items: start; }
+#page-overzicht .card-metrics { gap: 6px; margin-block: 8px; }
+#page-overzicht .card-metrics > div { padding: 6px 9px; }
+#page-overzicht .home-card > .small { margin: 5px 0; }
+#page-overzicht .home-chart { margin-block: 7px; padding: 7px 9px; }
+#page-overzicht .forecast-plot svg { height: 76px; }
+#page-overzicht .car-photo img { height: clamp(126px, 16vw, 180px); }
+.solar-details { margin-top: 6px; font-size: .8rem; }
+.solar-details summary { color: var(--muted); cursor: pointer; }
+#page-overzicht .home-data-list { margin-block: 6px; }
+#page-overzicht .home-data-list li { padding: 6px 0; }
+.favorite-flows-panel { margin-top: 12px; }
+@media (max-width: 550px) {
+  .compact-header { gap: 6px 7px; }
+  .service-strip { grid-column: 1 / -1; grid-row: 2; }
+  .compact-header .header-demo { grid-column: 1 / -1; min-height: 28px; justify-self: start; }
+  .energy-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .compact-header .top-actions { gap: 4px; }
+  .compact-header .icon-btn { width: 42px; height: 42px; }
+}
+
+@media (min-width: 1180px) {
+  #page-overzicht .home-card-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #page-overzicht .car-card { grid-column: 3; grid-row: 1 / span 2; }
+}

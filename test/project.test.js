@@ -441,3 +441,31 @@ test('prijsfeed combineert vandaag en morgen, inclusief negatieve tarieven en le
   assert.deepEqual((await getPrices()).points, []);
   assert.equal(requests.length, 2);
 });
+
+import { powerDirection, serviceStatus, welcomeText } from '../public/overview-data.js';
+
+test('actueel netvermogen kleurt volgens de richting en verouderde waarden blijven neutraal', () => {
+  const device = { id: 'p1', name: 'HomeWizard P1' };
+  assert.deepEqual(powerDirection({ device, value: -140 }, false), { state: 'export', label: 'Teruglevering' });
+  assert.equal(powerDirection({ device, value: 140 }, false).state, 'no-export');
+  assert.equal(powerDirection({ device, value: 0 }, false).label, 'Geen teruglevering');
+  assert.equal(powerDirection({ device, value: -140 }, true).state, 'unknown');
+  assert.equal(powerDirection({ device: { name: 'Stekker' }, value: -140 }, false).state, 'unknown');
+  assert.equal(powerDirection(null, false).state, 'unknown');
+});
+
+test('verbindingslampjes zijn pas groen bij een actieve Homey-verbinding en beschikbare apparaten', () => {
+  const google = { driverId: 'homey:app:com.google.chromecast:chromecast', available: true };
+  const meter = { driverId: 'homey:app:com.homewizard:energy_v2', available: true };
+  assert.deepEqual(serviceStatus('online', [google, meter]), { Homey: 'online', Google: 'online', Wizard: 'online' });
+  assert.deepEqual(serviceStatus('online', [{ ...google, available: false }]), {
+    Homey: 'online', Google: 'unavailable', Wizard: 'unavailable',
+  });
+  assert.deepEqual(serviceStatus('demo', [google, meter]), { Homey: 'demo', Google: 'unknown', Wizard: 'unknown' });
+  assert.deepEqual(serviceStatus('offline', [google, meter]), { Homey: 'offline', Google: 'unknown', Wizard: 'unknown' });
+});
+
+test('begroeting volgt de tijd in Amsterdam', () => {
+  assert.equal(welcomeText(Date.parse('2026-07-02T10:15:00Z')), 'Goedemiddag, welkom bij Hoefsetuin 32');
+  assert.equal(welcomeText(Date.parse('2026-11-22T10:15:00Z')), 'Goedemorgen, welkom bij Hoefsetuin 32');
+});
